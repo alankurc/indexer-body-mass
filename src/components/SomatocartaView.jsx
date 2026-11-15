@@ -313,14 +313,7 @@ export default function SomatocartaView({ data }) {
             </div>
 
             {/* Three Big Somatotype Component Cards matching the PDF colors */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '0.85rem',
-                marginBottom: '1rem',
-              }}
-            >
+            <div className="somato-cards-grid">
               <div
                 style={{
                   background: 'hsla(28, 80%, 94%, 0.7)',

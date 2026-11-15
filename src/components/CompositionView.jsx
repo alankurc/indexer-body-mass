@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 function fmt(v, d = 1) {
   if (v === null || v === undefined || Number.isNaN(Number(v))) return '—';
@@ -8,6 +8,14 @@ function fmt(v, d = 1) {
 export default function CompositionView({ data }) {
   const [formula, setFormula] = useState('durnin'); // 'durnin' | 'yuhasz'
   const [hoveredIdx, setHoveredIdx] = useState(null);
+  const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth <= 640 : false));
+  const svgRef = useRef(null);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 640);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   const valid = data.filter((d) =>
     formula === 'durnin'
@@ -40,17 +48,27 @@ export default function CompositionView({ data }) {
 
   const maxWeight = Math.max(...valid.map((d) => d.peso || 100)) * 1.06;
 
-  const W = 940;
-  const H = 310;
-  const padL = 52;
-  const padR = 24;
+  const W = isMobile ? 540 : 940;
+  const H = isMobile ? 280 : 310;
+  const padL = isMobile ? 44 : 52;
+  const padR = isMobile ? 16 : 24;
   const padT = 20;
-  const padB = 48;
+  const padB = 44;
   const plotW = W - padL - padR;
   const plotH = H - padT - padB;
 
   const barStep = plotW / valid.length;
-  const barWidth = Math.min(28, Math.max(8, barStep * 0.64));
+  const barWidth = Math.min(28, Math.max(6, barStep * 0.64));
+
+  const handleTouchScrub = (e) => {
+    if (!svgRef.current || valid.length === 0) return;
+    const touch = e.touches[0];
+    if (!touch) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const relX = ((touch.clientX - rect.left) / rect.width) * W;
+    const idx = Math.max(0, Math.min(valid.length - 1, Math.floor((relX - padL) / barStep)));
+    setHoveredIdx(idx);
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -70,7 +88,7 @@ export default function CompositionView({ data }) {
               className={`chip-btn ${formula === 'durnin' ? 'active' : ''}`}
               onClick={() => setFormula('durnin')}
             >
-              Durnin &amp; Womersley (Población Gral.)
+              Durnin &amp; Womersley
             </button>
             <button
               type="button"
@@ -78,7 +96,7 @@ export default function CompositionView({ data }) {
               className={`chip-btn ${formula === 'yuhasz' ? 'active' : ''}`}
               onClick={() => setFormula('yuhasz')}
             >
-              Yuhasz (6 Pliegues Atletas)
+              Yuhasz (Atletas)
             </button>
           </div>
         </div>
@@ -87,7 +105,7 @@ export default function CompositionView({ data }) {
         <div className="kpi-grid" style={{ marginBottom: '1.15rem' }}>
           <div className="kpi-card">
             <div className="kpi-top">
-              <span className="kpi-label">Variación Masa Grasa ({formula === 'durnin' ? 'D&W' : 'Yuhasz'})</span>
+              <span className="kpi-label">Masa Grasa ({formula === 'durnin' ? 'D&W' : 'Yuhasz'})</span>
               <span className={`kpi-delta ${deltaFatKg <= 0 ? 'good' : 'caution'}`}>
                 {deltaFatKg > 0 ? '+' : ''}
                 {fmt(deltaFatKg, 1)} kg
@@ -109,7 +127,7 @@ export default function CompositionView({ data }) {
 
           <div className="kpi-card">
             <div className="kpi-top">
-              <span className="kpi-label">Variación Masa Magra ({formula === 'durnin' ? 'D&W' : 'Yuhasz'})</span>
+              <span className="kpi-label">Masa Magra ({formula === 'durnin' ? 'D&W' : 'Yuhasz'})</span>
               <span className={`kpi-delta ${deltaLeanKg >= 0 ? 'good' : 'caution'}`}>
                 {deltaLeanKg > 0 ? '+' : ''}
                 {fmt(deltaLeanKg, 1)} kg
@@ -151,7 +169,7 @@ export default function CompositionView({ data }) {
 
           <div className="kpi-card">
             <div className="kpi-top">
-              <span className="kpi-label">Área Muscular de Brazo</span>
+              <span className="kpi-label">Área Musc. Brazo</span>
               <span className={`kpi-delta ${deltaAMB >= 0 ? 'good' : 'caution'}`}>
                 {deltaAMB > 0 ? '+' : ''}
                 {fmt(deltaAMB, 0)} mm²
@@ -177,31 +195,34 @@ export default function CompositionView({ data }) {
               display: 'flex',
               flexWrap: 'wrap',
               justifyContent: 'space-between',
-              gap: '0.75rem',
+              gap: '0.5rem',
               padding: '0.15rem 0.45rem 0.6rem',
               borderBottom: '1px solid var(--border-subtle)',
               marginBottom: '0.5rem',
-              fontSize: '0.82rem',
+              fontSize: '0.8rem',
             }}
           >
             <div>
-              <strong style={{ fontFamily: 'var(--font-mono)' }}>{active.fecha}</strong> — Peso Total:{' '}
+              <strong style={{ fontFamily: 'var(--font-mono)' }}>{active.fecha}</strong> — Peso:{' '}
               <strong style={{ fontFamily: 'var(--font-mono)' }}>{fmt(active.peso, 1)} kg</strong>
             </div>
-            <div style={{ display: 'flex', gap: '1.1rem', fontFamily: 'var(--font-mono)' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', fontFamily: 'var(--font-mono)' }}>
               <span style={{ color: '#23785a', fontWeight: 600 }}>
-                Masa Magra: {fmt(getLeanKg(active), 1)} kg ({fmt(100 - getFatPct(active), 1)}%)
+                Magra: {fmt(getLeanKg(active), 1)} kg ({fmt(100 - getFatPct(active), 1)}%)
               </span>
               <span style={{ color: '#c85a32', fontWeight: 600 }}>
-                Masa Grasa: {fmt(getFatKg(active), 1)} kg ({fmt(getFatPct(active), 1)}%)
+                Grasa: {fmt(getFatKg(active), 1)} kg ({fmt(getFatPct(active), 1)}%)
               </span>
             </div>
           </div>
 
           <svg
+            ref={svgRef}
             viewBox={`0 0 ${W} ${H}`}
             className="chart-svg"
             onMouseLeave={() => setHoveredIdx(null)}
+            onTouchStart={handleTouchScrub}
+            onTouchMove={handleTouchScrub}
           >
             {[0, 25, 50, 75, 100].map((val) => {
               if (val > maxWeight) return null;
@@ -217,14 +238,14 @@ export default function CompositionView({ data }) {
                     strokeDasharray={val === 0 ? undefined : '3 3'}
                   />
                   <text
-                    x={padL - 8}
+                    x={padL - 6}
                     y={y + 4}
                     textAnchor="end"
                     fontSize="10.5"
                     fontFamily="var(--font-mono)"
                     fill="var(--text-muted)"
                   >
-                    {val} kg
+                    {val}kg
                   </text>
                 </g>
               );
@@ -243,15 +264,15 @@ export default function CompositionView({ data }) {
               const fatY = leanY - fatH;
 
               const isHovered = hoveredIdx === i;
-              const labelStep = Math.max(1, Math.ceil(valid.length / 12));
+              const labelStep = Math.max(1, Math.ceil(valid.length / (isMobile ? 5 : 12)));
 
               return (
                 <g
                   key={d.id}
                   onMouseEnter={() => setHoveredIdx(i)}
+                  onClick={() => setHoveredIdx(i)}
                   style={{ cursor: 'pointer' }}
                 >
-                  {/* Lean Mass (bottom part of bar) */}
                   <rect
                     x={x}
                     y={leanY}
@@ -261,7 +282,6 @@ export default function CompositionView({ data }) {
                     fill="#23785a"
                     opacity={isHovered ? 1 : 0.85}
                   />
-                  {/* Fat Mass (top part of bar) */}
                   <rect
                     x={x}
                     y={fatY}
@@ -272,7 +292,6 @@ export default function CompositionView({ data }) {
                     opacity={isHovered ? 1 : 0.88}
                   />
 
-                  {/* Percentage label on top of bar */}
                   {(isHovered || i === 0 || i === valid.length - 1) && (
                     <text
                       x={xCenter}
@@ -326,8 +345,7 @@ export default function CompositionView({ data }) {
           <div>
             <h3 className="panel-title">Comparativa Simultánea: Durnin &amp; Womersley vs. Yuhasz (Atletas)</h3>
             <p className="panel-subtitle">
-              Ambos modelos incluidos en la hoja de resultados de tus PDFs (en amarillo Durnin &amp; Womersley; en
-              terracota Yuhasz Atletas).
+              Desliza horizontalmente la tabla en pantallas móviles para ver todas las columnas.
             </p>
           </div>
         </div>

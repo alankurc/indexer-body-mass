@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { METRIC_MAP } from '../utils/anthropometryMath.js';
 
 function formatValue(val, decimals = 1) {
@@ -61,7 +61,7 @@ export function MiniSparkChart({ data, metricKey, isSelected, onSelect }) {
           <small style={{ fontSize: '0.72rem', fontWeight: 500, color: 'var(--text-muted)' }}>{metric.unit}</small>
         </span>
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="chart-svg" style={{ height: '62px' }}>
+      <svg viewBox={`0 0 ${W} ${H}`} className="chart-svg" style={{ height: '58px' }}>
         <path d={areaD} fill={metric.color} fillOpacity="0.1" />
         <path d={pathD} fill="none" stroke={metric.color} strokeWidth="2" strokeLinecap="round" />
         <circle
@@ -73,7 +73,7 @@ export function MiniSparkChart({ data, metricKey, isSelected, onSelect }) {
       </svg>
       <div className="kpi-sub" style={{ marginTop: '0.35rem' }}>
         <span>
-          Rango: {formatValue(minVal, metric.decimals)} – {formatValue(maxVal, metric.decimals)} {metric.unit}
+          {formatValue(minVal, metric.decimals)}–{formatValue(maxVal, metric.decimals)} {metric.unit}
         </span>
         <span
           style={{
@@ -103,6 +103,14 @@ export default function TimeSeriesChart({
   onSelectPoint,
 }) {
   const [hoverIdx, setHoverIdx] = useState(null);
+  const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth <= 640 : false));
+  const svgRef = useRef(null);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 640);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   const primaryMetric = METRIC_MAP[primaryKey] || METRIC_MAP.peso;
   const secondaryMetric = secondaryKey && secondaryKey !== 'none' ? METRIC_MAP[secondaryKey] : null;
@@ -121,12 +129,12 @@ export default function TimeSeriesChart({
     );
   }
 
-  const W = 960;
-  const H = 350;
-  const padL = 58;
-  const padR = secondaryMetric ? 58 : 28;
-  const padT = 26;
-  const padB = 46;
+  const W = isMobile ? 540 : 960;
+  const H = isMobile ? 290 : 350;
+  const padL = isMobile ? 46 : 58;
+  const padR = secondaryMetric ? (isMobile ? 46 : 58) : isMobile ? 18 : 28;
+  const padT = 24;
+  const padB = 42;
   const plotW = W - padL - padR;
   const plotH = H - padT - padB;
 
@@ -187,7 +195,6 @@ export default function TimeSeriesChart({
     .map((pt, i) => `${i === 0 ? 'M' : 'L'}${pt.x.toFixed(1)},${pt.y.toFixed(1)}`)
     .join(' ');
 
-  // Y-axis ticks (5 horizontal lines)
   const yTicks = [0, 0.25, 0.5, 0.75, 1].map((t) => {
     const val = pMin + t * (pMax - pMin);
     const sVal = sMin + t * (sMax - sMin);
@@ -195,7 +202,6 @@ export default function TimeSeriesChart({
     return { y, val, sVal };
   });
 
-  // Min & Max indices
   let minIdx = 0;
   let maxIdx = 0;
   primaryPoints.forEach((pt, idx) => {
@@ -209,6 +215,27 @@ export default function TimeSeriesChart({
   const stepDelta = activePoint && prevPoint ? activePoint.val - prevPoint.val : 0;
   const totalDelta = activePoint ? activePoint.val - primaryPoints[0].val : 0;
 
+  // Touch scrubbing handler for mobile screens
+  const handleTouchScrub = (e) => {
+    if (!svgRef.current || primaryPoints.length === 0) return;
+    const touch = e.touches[0];
+    if (!touch) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const relX = ((touch.clientX - rect.left) / rect.width) * W;
+    let closestIdx = 0;
+    let minDist = Infinity;
+    primaryPoints.forEach((pt, i) => {
+      const dist = Math.abs(pt.x - relX);
+      if (dist < minDist) {
+        minDist = dist;
+        closestIdx = i;
+      }
+    });
+    setHoverIdx(closestIdx);
+  };
+
+  const maxDateLabels = isMobile ? 5 : 10;
+
   return (
     <div className="chart-stage" id="primary-timeseries-stage">
       {/* Interactive Top Readout Bar */}
@@ -218,34 +245,34 @@ export default function TimeSeriesChart({
           flexWrap: 'wrap',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '0.75rem',
-          padding: '0.2rem 0.5rem 0.65rem',
+          gap: '0.55rem',
+          padding: '0.2rem 0.4rem 0.65rem',
           borderBottom: '1px solid var(--border-subtle)',
           marginBottom: '0.5rem',
         }}
       >
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '0.9rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '0.65rem' }}>
           <span
             style={{
               fontFamily: 'var(--font-mono)',
-              fontSize: '0.78rem',
+              fontSize: '0.76rem',
               fontWeight: 600,
               background: 'var(--bg-elevated)',
-              padding: '0.2rem 0.55rem',
+              padding: '0.2rem 0.5rem',
               borderRadius: '4px',
             }}
           >
-            Fecha: {activePoint.record.fecha}
-            {activePoint.record.numeroMedicion ? ` (Med. #${activePoint.record.numeroMedicion})` : ''}
+            {activePoint.record.fecha}
+            {activePoint.record.numeroMedicion ? ` (#${activePoint.record.numeroMedicion})` : ''}
           </span>
           <div>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginRight: '0.35rem' }}>
-              {primaryMetric.label}:
+            <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginRight: '0.3rem' }}>
+              {primaryMetric.shortLabel}:
             </span>
             <strong
               style={{
                 fontFamily: 'var(--font-mono)',
-                fontSize: '1.1rem',
+                fontSize: '1.05rem',
                 color: primaryMetric.color,
               }}
             >
@@ -254,13 +281,13 @@ export default function TimeSeriesChart({
           </div>
           {secondaryMetric && activePoint.record[secondaryKey] != null && (
             <div>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginRight: '0.35rem' }}>
-                {secondaryMetric.label}:
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginRight: '0.3rem' }}>
+                {secondaryMetric.shortLabel}:
               </span>
               <strong
                 style={{
                   fontFamily: 'var(--font-mono)',
-                  fontSize: '1.05rem',
+                  fontSize: '1rem',
                   color: '#c85a32',
                 }}
               >
@@ -270,16 +297,24 @@ export default function TimeSeriesChart({
           )}
         </div>
 
-        <div style={{ display: 'flex', gap: '0.85rem', fontFamily: 'var(--font-mono)', fontSize: '0.77rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '0.65rem',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.74rem',
+          }}
+        >
           <span>
-            vs anterior:{' '}
+            vs ant:{' '}
             <strong>
               {stepDelta > 0 ? '+' : ''}
               {formatValue(stepDelta, primaryMetric.decimals)} {primaryMetric.unit}
             </strong>
           </span>
           <span>
-            vs inicio ({primaryPoints[0].record.fecha}):{' '}
+            vs inicio:{' '}
             <strong>
               {totalDelta > 0 ? '+' : ''}
               {formatValue(totalDelta, primaryMetric.decimals)} {primaryMetric.unit}
@@ -289,9 +324,12 @@ export default function TimeSeriesChart({
       </div>
 
       <svg
+        ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}
         className="chart-svg"
         onMouseLeave={() => setHoverIdx(null)}
+        onTouchStart={handleTouchScrub}
+        onTouchMove={handleTouchScrub}
       >
         <defs>
           <linearGradient id={`grad-${primaryKey}`} x1="0" y1="0" x2="0" y2="1">
@@ -312,7 +350,7 @@ export default function TimeSeriesChart({
               strokeDasharray={idx === 0 ? undefined : '3 3'}
             />
             <text
-              x={padL - 8}
+              x={padL - 6}
               y={t.y + 4}
               textAnchor="end"
               fontSize="11"
@@ -323,7 +361,7 @@ export default function TimeSeriesChart({
             </text>
             {secondaryMetric && sVals.length > 0 && (
               <text
-                x={W - padR + 8}
+                x={W - padR + 6}
                 y={t.y + 4}
                 textAnchor="start"
                 fontSize="11"
@@ -338,14 +376,14 @@ export default function TimeSeriesChart({
 
         {/* X Axis Date Labels */}
         {primaryPoints.map((pt, i) => {
-          const step = Math.max(1, Math.ceil(primaryPoints.length / 10));
+          const step = Math.max(1, Math.ceil(primaryPoints.length / maxDateLabels));
           if (i % step !== 0 && i !== primaryPoints.length - 1) return null;
           return (
             <g key={pt.record.id}>
               <line x1={pt.x} y1={padT + plotH} x2={pt.x} y2={padT + plotH + 5} stroke="var(--border-strong)" />
               <text
                 x={pt.x}
-                y={padT + plotH + 20}
+                y={padT + plotH + 19}
                 textAnchor="middle"
                 fontSize="10.5"
                 fontFamily="var(--font-mono)"
@@ -448,7 +486,6 @@ export default function TimeSeriesChart({
                   {isMax ? 'Máx' : 'Mín'}: {formatValue(pt.val, primaryMetric.decimals)}
                 </text>
               )}
-              {/* Invisible wide hit target for smooth mouse interaction */}
               <rect
                 x={pt.x - plotW / Math.max(2, primaryPoints.length * 2)}
                 y={padT}
@@ -457,7 +494,13 @@ export default function TimeSeriesChart({
                 fill="transparent"
                 style={{ cursor: 'pointer' }}
                 onMouseEnter={() => setHoverIdx(i)}
-                onClick={() => onSelectPoint && onSelectPoint(pt.record)}
+                onClick={() => {
+                  if (isMobile) {
+                    setHoverIdx(i);
+                  } else if (onSelectPoint) {
+                    onSelectPoint(pt.record);
+                  }
+                }}
               />
             </g>
           );
@@ -468,7 +511,7 @@ export default function TimeSeriesChart({
         <div className="legend-items">
           <span className="legend-item">
             <span className="legend-swatch" style={{ background: primaryMetric.color }} />
-            {primaryMetric.label} ({primaryMetric.unit || 'índice'})
+            {primaryMetric.shortLabel} ({primaryMetric.unit || 'índice'})
           </span>
           {showMovingAverage && primaryPoints.length >= 3 && (
             <span className="legend-item">
@@ -480,17 +523,17 @@ export default function TimeSeriesChart({
                   height: 0,
                 }}
               />
-              Media móvil (3 mediciones)
+              Media móvil
             </span>
           )}
           {secondaryMetric && (
             <span className="legend-item">
               <span className="legend-swatch" style={{ background: '#c85a32' }} />
-              {secondaryMetric.label} ({secondaryMetric.unit || 'índice'}) [Eje derecho]
+              {secondaryMetric.shortLabel} [Eje der.]
             </span>
           )}
         </div>
-        <span>Pasa el cursor sobre cualquier punto para inspeccionar valores y variaciones.</span>
+        <span>Desliza el dedo o el cursor sobre el gráfico para inspeccionar fechas.</span>
       </div>
     </div>
   );

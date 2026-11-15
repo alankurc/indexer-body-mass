@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 
 const SKINFOLD_AXES = [
   { key: 'triceps', label: 'Tríceps', color: '#c85a32' },
@@ -26,6 +26,13 @@ function fmt(v, d = 1) {
 
 export default function SkinfoldsPerimetersView({ data, baseRecord, currentRecord, onChangeBase, onChangeCurrent }) {
   const [hiddenSkinfolds, setHiddenSkinfolds] = useState({});
+  const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth <= 640 : false));
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 640);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   const toggleSkinfold = (key) => {
     setHiddenSkinfolds((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -34,7 +41,6 @@ export default function SkinfoldsPerimetersView({ data, baseRecord, currentRecor
   const base = baseRecord || data[0];
   const current = currentRecord || data[data.length - 1];
 
-  // Radar geometry for 8 skinfolds
   const R_SIZE = 340;
   const cx = R_SIZE / 2;
   const cy = R_SIZE / 2;
@@ -62,11 +68,10 @@ export default function SkinfoldsPerimetersView({ data, baseRecord, currentRecor
     }).join(' ');
   };
 
-  // Multi-line chart of all 8 skinfolds over time
-  const W = 940;
-  const H = 310;
-  const padL = 48;
-  const padR = 24;
+  const W = isMobile ? 540 : 940;
+  const H = isMobile ? 280 : 310;
+  const padL = isMobile ? 44 : 48;
+  const padR = isMobile ? 16 : 24;
   const padT = 20;
   const padB = 42;
   const plotW = W - padL - padR;
@@ -80,9 +85,9 @@ export default function SkinfoldsPerimetersView({ data, baseRecord, currentRecor
       {/* Selector of two dates to compare */}
       <div className="control-bar">
         <div className="control-group">
-          <span className="control-label">Comparación Anatómica:</span>
+          <span className="control-label">Comparar:</span>
           <label htmlFor="skinfold-base-select" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-            Referencia (A):
+            Ref (A):
           </label>
           <select
             id="skinfold-base-select"
@@ -100,7 +105,7 @@ export default function SkinfoldsPerimetersView({ data, baseRecord, currentRecor
           <span style={{ fontWeight: 700, color: 'var(--text-muted)' }}>→</span>
 
           <label htmlFor="skinfold-curr-select" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-            Evaluación (B):
+            Actual (B):
           </label>
           <select
             id="skinfold-curr-select"
@@ -157,8 +162,7 @@ export default function SkinfoldsPerimetersView({ data, baseRecord, currentRecor
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <svg viewBox={`0 0 ${R_SIZE} ${R_SIZE}`} style={{ width: '100%', maxWidth: '360px', height: 'auto' }}>
-              {/* Concentric rings */}
+            <svg viewBox={`0 0 ${R_SIZE} ${R_SIZE}`} style={{ width: '100%', maxWidth: '350px', height: 'auto' }}>
               {[0.25, 0.5, 0.75, 1].map((t) => (
                 <g key={t}>
                   <circle
@@ -181,7 +185,6 @@ export default function SkinfoldsPerimetersView({ data, baseRecord, currentRecor
                 </g>
               ))}
 
-              {/* Axis spokes & labels */}
               {SKINFOLD_AXES.map((ax, i) => {
                 const angle = (Math.PI * 2 * i) / SKINFOLD_AXES.length - Math.PI / 2;
                 const x2 = cx + radius * Math.cos(angle);
@@ -206,7 +209,6 @@ export default function SkinfoldsPerimetersView({ data, baseRecord, currentRecor
                 );
               })}
 
-              {/* Base polygon */}
               {base && (
                 <polygon
                   points={buildPolygon(base)}
@@ -217,7 +219,6 @@ export default function SkinfoldsPerimetersView({ data, baseRecord, currentRecor
                 />
               )}
 
-              {/* Current polygon */}
               {current && (
                 <polygon
                   points={buildPolygon(current)}
@@ -228,15 +229,14 @@ export default function SkinfoldsPerimetersView({ data, baseRecord, currentRecor
               )}
             </svg>
 
-            <div className="legend-items" style={{ marginTop: '0.5rem' }}>
+            <div className="legend-items" style={{ marginTop: '0.5rem', fontSize: '0.78rem' }}>
               <span className="legend-item">
                 <span className="legend-swatch" style={{ background: '#c85a32' }} />
-                Referencia ({base?.fecha}) — Σ6: {fmt(base?.suma6Pliegues)} mm / Σ8: {fmt(base?.suma8Pliegues)} mm
+                Ref ({base?.fecha}) — Σ6: {fmt(base?.suma6Pliegues)} mm
               </span>
               <span className="legend-item">
                 <span className="legend-swatch" style={{ background: '#0d6e6e' }} />
-                Evaluación ({current?.fecha}) — Σ6: {fmt(current?.suma6Pliegues)} mm / Σ8:{' '}
-                {fmt(current?.suma8Pliegues)} mm
+                Actual ({current?.fecha}) — Σ6: {fmt(current?.suma6Pliegues)} mm
               </span>
             </div>
           </div>
@@ -260,17 +260,10 @@ export default function SkinfoldsPerimetersView({ data, baseRecord, currentRecor
               const pctW = vB != null ? Math.min(100, (vB / maxSkinfold) * 100) : 0;
               const basePctW = vA != null ? Math.min(100, (vA / maxSkinfold) * 100) : 0;
               return (
-                <div
-                  key={ax.key}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '120px 1fr 140px',
-                    alignItems: 'center',
-                    gap: '0.65rem',
-                    fontSize: '0.8rem',
-                  }}
-                >
-                  <span style={{ fontWeight: 600 }}>{ax.label}</span>
+                <div key={ax.key} className="skinfold-delta-row">
+                  <span style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {ax.label}
+                  </span>
                   <div
                     style={{
                       position: 'relative',
@@ -307,11 +300,12 @@ export default function SkinfoldsPerimetersView({ data, baseRecord, currentRecor
                     style={{
                       textAlign: 'right',
                       fontFamily: 'var(--font-mono)',
-                      fontSize: '0.76rem',
+                      fontSize: '0.73rem',
+                      whiteSpace: 'nowrap',
                     }}
                   >
                     <span>
-                      {fmt(vA)} → <strong>{fmt(vB)}</strong>
+                      {fmt(vA)}→<strong>{fmt(vB)}</strong>
                     </span>{' '}
                     {diff !== null && (
                       <span
@@ -342,29 +336,36 @@ export default function SkinfoldsPerimetersView({ data, baseRecord, currentRecor
                   key={ax.key}
                   style={{
                     display: 'flex',
+                    flexWrap: 'wrap',
                     alignItems: 'center',
                     justifyContent: 'space-between',
+                    gap: '0.35rem',
                     padding: '0.32rem 0.5rem',
                     background: 'var(--bg-subtle)',
                     borderRadius: '4px',
-                    fontSize: '0.8rem',
+                    fontSize: '0.78rem',
                   }}
                 >
                   <span style={{ fontWeight: 600 }}>{ax.label}</span>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
                     <span>
-                      {fmt(vA)} cm → <strong>{fmt(vB)} cm</strong>
+                      {fmt(vA)} → <strong>{fmt(vB)} cm</strong>
                     </span>{' '}
                     {diff !== null && (
                       <span
                         style={{
-                          marginLeft: '0.35rem',
-                          color: Math.abs(diff) < 0.05 ? 'var(--text-muted)' : isGood ? 'var(--accent-positive)' : 'var(--accent-caution)',
+                          marginLeft: '0.25rem',
+                          color:
+                            Math.abs(diff) < 0.05
+                              ? 'var(--text-muted)'
+                              : isGood
+                                ? 'var(--accent-positive)'
+                                : 'var(--accent-caution)',
                           fontWeight: 600,
                         }}
                       >
                         ({diff > 0 ? '+' : ''}
-                        {fmt(diff)} cm)
+                        {fmt(diff)})
                       </span>
                     )}
                   </div>
@@ -381,7 +382,7 @@ export default function SkinfoldsPerimetersView({ data, baseRecord, currentRecor
           <div>
             <h2 className="panel-title">Curvas de Evolución Simultánea de los 8 Pliegues Cutáneos (mm)</h2>
             <p className="panel-subtitle">
-              Haz clic en cualquier pliegue para ocultarlo o aislarlo en el gráfico temporal.
+              Toca cualquier pliegue para ocultarlo o aislarlo en el gráfico temporal.
             </p>
           </div>
           <div className="metric-pills">
@@ -423,21 +424,21 @@ export default function SkinfoldsPerimetersView({ data, baseRecord, currentRecor
                     strokeDasharray={t === 0 ? undefined : '3 3'}
                   />
                   <text
-                    x={padL - 8}
+                    x={padL - 6}
                     y={y + 4}
                     textAnchor="end"
                     fontSize="10.5"
                     fontFamily="var(--font-mono)"
                     fill="var(--text-muted)"
                   >
-                    {val} mm
+                    {val}mm
                   </text>
                 </g>
               );
             })}
 
             {data.map((d, i) => {
-              const step = Math.max(1, Math.ceil(data.length / 10));
+              const step = Math.max(1, Math.ceil(data.length / (isMobile ? 5 : 10)));
               if (i % step !== 0 && i !== data.length - 1) return null;
               const x = getX(i);
               return (

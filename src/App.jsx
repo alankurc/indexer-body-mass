@@ -633,7 +633,8 @@ export default function App() {
           onClick={() => setActiveView('evolucion')}
         >
           <TrendingUp size={16} />
-          Evolución Temporal ({filteredData.length})
+          <span className="view-tab-full">Evolución Temporal ({filteredData.length})</span>
+          <span className="view-tab-short">Evolución</span>
         </button>
         <button
           type="button"
@@ -642,7 +643,8 @@ export default function App() {
           onClick={() => setActiveView('composicion')}
         >
           <Layers size={16} />
-          Durnin &amp; Womersley vs. Yuhasz
+          <span className="view-tab-full">Durnin &amp; Womersley vs. Yuhasz</span>
+          <span className="view-tab-short">Fórmulas</span>
         </button>
         <button
           type="button"
@@ -651,7 +653,8 @@ export default function App() {
           onClick={() => setActiveView('pliegues')}
         >
           <Activity size={16} />
-          Pliegues (8) y Perímetros (5)
+          <span className="view-tab-full">Pliegues (8) y Perímetros (5)</span>
+          <span className="view-tab-short">Pliegues</span>
         </button>
         <button
           type="button"
@@ -660,7 +663,8 @@ export default function App() {
           onClick={() => setActiveView('somatocarta')}
         >
           <Compass size={16} />
-          Somatocarta Heath &amp; Carter
+          <span className="view-tab-full">Somatocarta Heath &amp; Carter</span>
+          <span className="view-tab-short">Somatotipo</span>
         </button>
         <button
           type="button"
@@ -669,7 +673,8 @@ export default function App() {
           onClick={() => setActiveView('tabla')}
         >
           <Table2 size={16} />
-          Hoja Clínica &amp; Editor
+          <span className="view-tab-full">Hoja Clínica &amp; Editor</span>
+          <span className="view-tab-short">Datos</span>
         </button>
       </nav>
 

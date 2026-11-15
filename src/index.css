@@ -54,6 +54,7 @@ html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -62,6 +63,7 @@ body {
   color: var(--text-primary);
   line-height: 1.5;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* App Shell */
@@ -91,7 +93,7 @@ body {
   background: var(--bg-surface);
   border: 2px dashed var(--accent-primary);
   border-radius: var(--radius-lg);
-  padding: 3rem 4rem;
+  padding: 2.5rem 2rem;
   text-align: center;
   box-shadow: var(--shadow-lg);
   max-width: 540px;
@@ -99,7 +101,7 @@ body {
 
 .global-drop-box h2 {
   font-family: var(--font-serif);
-  font-size: 1.65rem;
+  font-size: 1.5rem;
   color: var(--text-primary);
   margin: 0.75rem 0 0.35rem;
 }
@@ -135,7 +137,7 @@ body {
 
 .brand-title {
   font-family: var(--font-serif);
-  font-size: clamp(1.35rem, 2.2vw, 1.85rem);
+  font-size: clamp(1.3rem, 2.2vw, 1.85rem);
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text-primary);
@@ -172,6 +174,7 @@ body {
   transition: all 0.15s ease;
   text-decoration: none;
   white-space: nowrap;
+  touch-action: manipulation;
 }
 
 .btn:hover {
@@ -217,7 +220,7 @@ body {
 }
 
 .btn-sm {
-  padding: 0.35rem 0.65rem;
+  padding: 0.38rem 0.68rem;
   font-size: 0.78rem;
 }
 
@@ -311,6 +314,7 @@ body {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
+  max-width: 100%;
 }
 
 .control-label {
@@ -331,6 +335,7 @@ body {
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
   gap: 0.15rem;
+  max-width: 100%;
 }
 
 .chip-btn {
@@ -340,10 +345,12 @@ body {
   font-family: var(--font-sans);
   font-size: 0.78rem;
   font-weight: 600;
-  padding: 0.32rem 0.68rem;
+  padding: 0.34rem 0.68rem;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.14s ease;
+  white-space: nowrap;
+  touch-action: manipulation;
 }
 
 .chip-btn:hover {
@@ -360,12 +367,13 @@ body {
   font-family: var(--font-mono);
   font-size: 0.8rem;
   font-weight: 500;
-  padding: 0.36rem 0.65rem;
+  padding: 0.4rem 0.65rem;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-strong);
   background: var(--bg-surface);
   color: var(--text-primary);
   cursor: pointer;
+  max-width: 100%;
 }
 
 /* KPI Summary Strip */
@@ -387,6 +395,7 @@ body {
   gap: 0.5rem;
   cursor: pointer;
   transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  touch-action: manipulation;
 }
 
 .kpi-card:hover {
@@ -404,7 +413,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .kpi-label {
@@ -415,11 +424,12 @@ body {
 
 .kpi-delta {
   font-family: var(--font-mono);
-  font-size: 0.73rem;
+  font-size: 0.72rem;
   font-weight: 600;
   padding: 0.15rem 0.45rem;
   border-radius: 4px;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .kpi-delta.good {
@@ -441,7 +451,8 @@ body {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.4rem;
+  flex-wrap: wrap;
 }
 
 .kpi-value {
@@ -464,6 +475,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.35rem;
   font-size: 0.75rem;
   color: var(--text-muted);
   border-top: 1px solid var(--bg-elevated);
@@ -471,7 +483,7 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Primary View Tabs */
+/* Primary View Tabs (Desktop Top Bar + Mobile Sticky Bottom Bar) */
 .view-nav {
   display: flex;
   flex-wrap: wrap;
@@ -494,6 +506,7 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
+  touch-action: manipulation;
 }
 
 .view-tab:hover {
@@ -506,6 +519,10 @@ body {
   color: #ffffff;
   border-color: var(--accent-primary);
   box-shadow: var(--shadow-sm);
+}
+
+.view-tab-short {
+  display: none;
 }
 
 /* Section Panels */
@@ -559,7 +576,7 @@ body {
   font-family: var(--font-sans);
   font-size: 0.79rem;
   font-weight: 600;
-  padding: 0.36rem 0.75rem;
+  padding: 0.38rem 0.75rem;
   border-radius: 999px;
   border: 1px solid var(--border-strong);
   background: var(--bg-surface);
@@ -569,6 +586,8 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  white-space: nowrap;
+  touch-action: manipulation;
 }
 
 .metric-pill:hover {
@@ -596,6 +615,7 @@ body {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 1rem 0.75rem 0.65rem;
+  touch-action: pan-y;
 }
 
 .chart-svg {
@@ -603,6 +623,8 @@ body {
   height: auto;
   display: block;
   overflow: visible;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .chart-legend-bar {
@@ -622,7 +644,7 @@ body {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 1rem;
+  gap: 0.85rem;
 }
 
 .legend-item {
@@ -637,12 +659,13 @@ body {
   height: 12px;
   border-radius: 3px;
   display: inline-block;
+  flex-shrink: 0;
 }
 
 /* Small Multiples Grid */
 .small-multiples-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
   gap: 0.9rem;
   margin-top: 1.25rem;
 }
@@ -654,6 +677,7 @@ body {
   padding: 0.95rem 1rem;
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  touch-action: manipulation;
 }
 
 .mini-chart-card:hover {
@@ -693,16 +717,35 @@ body {
   gap: 1.25rem;
 }
 
+/* Anatomical Delta Row */
+.skinfold-delta-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 145px;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.8rem;
+}
+
+/* Somatotype 3-Card Row */
+.somato-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
 /* Tables */
 .table-scroll {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
 }
 
 .clinical-table {
   width: 100%;
+  min-width: 580px;
   border-collapse: collapse;
   font-size: 0.83rem;
   background: var(--bg-surface);
@@ -761,9 +804,9 @@ body {
 /* Somatocarta Rating Scale Table */
 .rating-scale-table {
   width: 100%;
+  min-width: 540px;
   border-collapse: collapse;
   font-size: 0.78rem;
-  margin-top: 1rem;
 }
 
 .rating-scale-table th,
@@ -822,6 +865,7 @@ body {
 .modal-body {
   padding: 1.25rem 1.4rem;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   gap: 1.15rem;
@@ -867,7 +911,7 @@ body {
 
 .form-field input {
   font-family: var(--font-mono);
-  font-size: 0.84rem;
+  font-size: 0.88rem;
   padding: 0.45rem 0.6rem;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
@@ -880,14 +924,210 @@ body {
   border-color: transparent;
 }
 
+/* =========================================================
+   TABLET & MOBILE RESPONSIVE BREAKPOINTS
+   ========================================================= */
 @media (max-width: 860px) {
   .app-shell {
-    padding: 0.85rem 0.9rem 2.5rem;
+    padding: 0.75rem 0.75rem 5.5rem;
+    gap: 0.9rem;
   }
+
   .two-col-grid {
     grid-template-columns: 1fr;
   }
+
   .top-header {
-    padding: 1rem;
+    padding: 0.95rem 1rem;
+    gap: 0.8rem;
+  }
+
+  .panel {
+    padding: 1rem 0.95rem;
+  }
+
+  .panel-title {
+    font-size: 1.08rem;
+  }
+
+  /* Horizontal swipeable chips without wrapping clutter */
+  .chip-group {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    max-width: 100%;
+  }
+
+  .chip-group::-webkit-scrollbar {
+    display: none;
+  }
+
+  .metric-pills {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 0.2rem;
+  }
+
+  .metric-pills::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Fixed Bottom Navigation Bar on Mobile & Tablet */
+  .view-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 800;
+    background: rgba(252, 250, 245, 0.96);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border-strong);
+    border-bottom: none;
+    padding: 0.35rem 0.4rem calc(0.35rem + env(safe-area-inset-bottom, 0px));
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.2rem;
+    box-shadow: 0 -4px 16px rgba(22, 34, 42, 0.08);
+  }
+
+  .view-tab {
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.2rem;
+    padding: 0.4rem 0.2rem;
+    font-size: 0.68rem;
+    text-align: center;
+    border-radius: 6px;
+  }
+
+  .view-tab-full {
+    display: none;
+  }
+
+  .view-tab-short {
+    display: inline;
+  }
+}
+
+@media (max-width: 600px) {
+  .brand-subtitle {
+    font-size: 0.78rem;
+  }
+
+  .header-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem;
+  }
+
+  .header-actions #btn-upload-pdf {
+    grid-column: 1 / -1;
+    padding: 0.68rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .upload-strip {
+    padding: 0.75rem 0.9rem;
+  }
+
+  .upload-strip-text h2 {
+    font-size: 0.85rem;
+  }
+
+  .upload-strip-text p {
+    font-size: 0.74rem;
+  }
+
+  .upload-strip > .btn {
+    width: 100%;
+  }
+
+  /* Compact 2-Column KPI Grid on Phones */
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .kpi-card {
+    padding: 0.7rem 0.75rem;
+    gap: 0.35rem;
+  }
+
+  .kpi-label {
+    font-size: 0.71rem;
+    line-height: 1.2;
+  }
+
+  .kpi-delta {
+    font-size: 0.66rem;
+    padding: 0.1rem 0.32rem;
+  }
+
+  .kpi-value {
+    font-size: 1.22rem;
+  }
+
+  .kpi-unit {
+    font-size: 0.72rem;
+  }
+
+  .kpi-sub {
+    font-size: 0.68rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.1rem;
+  }
+
+  .small-multiples-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .mini-chart-card {
+    padding: 0.7rem 0.75rem;
+  }
+
+  .mini-chart-title {
+    font-size: 0.75rem;
+  }
+
+  .mini-chart-val {
+    font-size: 0.84rem;
+  }
+
+  .skinfold-delta-row {
+    grid-template-columns: 92px 1fr 112px;
+    gap: 0.4rem;
+    font-size: 0.74rem;
+  }
+
+  .somato-cards-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+
+  /* Fullscreen sheet modal on mobile + 16px inputs to prevent iOS zoom */
+  .modal-backdrop {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .modal-card {
+    max-height: 92vh;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .form-field input,
+  .select-input {
+    font-size: 16px;
   }
 }
